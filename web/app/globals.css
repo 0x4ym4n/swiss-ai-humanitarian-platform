@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* MapLibre GL styles */
+@import 'maplibre-gl/dist/maplibre-gl.css';
+
+html, body { @apply m-0 p-0 font-sans; }
+button { @apply px-3 py-2 rounded bg-blue-600 text-white hover:bg-blue-700; }
+
+/* Card surface */
+.card { @apply bg-[#141821] border border-gray-800 rounded-xl shadow-lg ring-1 ring-gray-800/60; }
+.card-header { @apply px-4 py-3 border-b border-gray-800 flex items-center justify-between; }
+.card-title { @apply text-sm font-medium text-gray-200; }
+.card-body { @apply p-5; }
+
+/* Stat chip */
+.stat { @apply card p-4 flex items-center gap-3 h-24; }
+.stat-value { @apply text-2xl font-semibold text-white; }
+.stat-label { @apply text-xs text-gray-400; }
+
+/* Table */
+.tbl { @apply w-full text-sm; }
+.tbl th { @apply text-left text-gray-400 font-medium py-3 px-3 border-b border-gray-800; }
+.tbl td { @apply py-3 px-3 border-b border-gray-900 text-gray-200; }

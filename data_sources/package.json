@@ -1,0 +1,12 @@
+{
+  "name": "swiss-ai-scrapper",
+  "version": "1.0.0",
+  "description": "Web scraper for Swiss development projects",
+  "main": "scrapper.js",
+  "scripts": {
+    "start": "node scrapper.js"
+  },
+  "dependencies": {
+    "puppeteer": "^21.0.0"
+  }
+}

@@ -1,0 +1,87 @@
+version: "3.9"
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: swissai_postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-swissai}
+      POSTGRES_USER: ${POSTGRES_USER:-swiss}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-swisspassword}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: swissai_qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_storage:/qdrant/storage
+
+  api:
+    build:
+      context: ./django
+      dockerfile: Dockerfile
+    container_name: swissai_api
+    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-insecure-secret}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-1}
+      POSTGRES_DB: ${POSTGRES_DB:-swissai}
+      POSTGRES_USER: ${POSTGRES_USER:-swiss}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-swisspassword}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      QDRANT_URL: http://qdrant:6333
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      DEEPINFRA_API_KEY: ${DEEPINFRA_API_KEY}
+      DEEPINFRA_MODEL: ${DEEPINFRA_MODEL:-Qwen/Qwen3-Embedding-0.6B}
+      EMBEDDING_DIMENSIONS: ${EMBEDDING_DIMENSIONS:-1536}
+      OPENAI_EMBED_MODEL: ${OPENAI_EMBED_MODEL:-text-embedding-3-small}
+      MISTRAL_API_KEY: ${MISTRAL_API_KEY}
+      HF_TOKEN: ${HF_TOKEN}
+    volumes:
+      - ./django:/app
+      - ./data_sources:/data_sources:ro
+    depends_on:
+      db:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+    ports:
+      - "8000:8000"
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: swissai_web
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
+    ports:
+      - "3000:3000"
+    command: sh -c "npm install && npm run dev"
+    volumes:
+      - ./web:/app
+      - web_node_modules:/app/node_modules
+    depends_on:
+      - api
+
+volumes:
+  pg_data:
+  qdrant_storage:
+  web_node_modules:
+
+
+
